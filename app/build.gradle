@@ -78,7 +78,7 @@ dependencies {
     implementation "androidx.appcompat:appcompat:$appcompatVersion"
     implementation "androidx.cardview:cardview:$cardviewVersion"
     implementation "androidx.core:core-ktx:$coreKtxVersion"
-    implementation "androidx.databinding:databinding-runtime:$databindingVersion"
+    implementation "androidx.databinding:databinding-runtime:$agpVersion"
     implementation "androidx.fragment:fragment:$fragmentVersion"
     implementation "androidx.preference:preference:$preferenceVersion"
     implementation "com.google.android.material:material:$materialComponentsVersion"
