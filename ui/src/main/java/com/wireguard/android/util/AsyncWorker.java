@@ -19,10 +19,16 @@ import java9.util.concurrent.CompletionStage;
 public class AsyncWorker {
     private final Executor executor;
     private final Handler handler;
+    private static AsyncWorker instance;
 
     public AsyncWorker(final Executor executor, final Handler handler) {
         this.executor = executor;
         this.handler = handler;
+        instance = this;
+    }
+
+    public static AsyncWorker getInstance() {
+        return instance;
     }
 
     public CompletionStage<Void> runAsync(final AsyncRunnable<?> runnable) {

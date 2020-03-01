@@ -5,6 +5,7 @@
 
 package com.wireguard.android.util;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import androidx.annotation.Nullable;
 import android.util.Log;
@@ -29,6 +30,7 @@ import java.util.UUID;
 public class RootShell {
     private static final String SU = "su";
     private static final String TAG = "WireGuard/" + RootShell.class.getSimpleName();
+    @SuppressLint("StaticFieldLeak") private static RootShell instance;
 
     private final Context context;
     private final String deviceNotRootedMessage;
@@ -48,6 +50,11 @@ public class RootShell {
         preamble = String.format("export CALLING_PACKAGE=%s PATH=\"%s:$PATH\" TMPDIR='%s'; id -u\n",
                 BuildConfig.APPLICATION_ID, localBinaryDir, localTemporaryDir);
         this.context = context;
+        instance = this;
+    }
+
+    public static RootShell getInstance() {
+        return instance;
     }
 
     private static boolean isExecutableInPath(final String name) {

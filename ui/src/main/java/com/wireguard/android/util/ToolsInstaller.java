@@ -5,6 +5,7 @@
 
 package com.wireguard.android.util;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import androidx.annotation.Nullable;
 import android.system.OsConstants;
@@ -20,6 +21,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Helper to install WireGuard tools to the system partition.
@@ -38,6 +40,7 @@ public final class ToolsInstaller {
     };
     @Nullable private static final File INSTALL_DIR = getInstallDir();
     private static final String TAG = "WireGuard/" + ToolsInstaller.class.getSimpleName();
+    @SuppressLint("StaticFieldLeak") private static ToolsInstaller instance;
 
     private final Context context;
     private final File localBinaryDir;
@@ -48,6 +51,11 @@ public final class ToolsInstaller {
     public ToolsInstaller(final Context context) {
         localBinaryDir = new File(context.getCodeCacheDir(), "bin");
         this.context = context;
+        instance = this;
+    }
+
+    public static ToolsInstaller getInstance() {
+        return instance;
     }
 
     @Nullable
