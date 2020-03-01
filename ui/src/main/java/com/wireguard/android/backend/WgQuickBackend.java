@@ -11,6 +11,7 @@ import android.util.Log;
 
 import com.wireguard.android.Application;
 import com.wireguard.android.R;
+import com.wireguard.android.backend.BackendException.Reason;
 import com.wireguard.android.model.Tunnel;
 import com.wireguard.android.model.Tunnel.State;
 import com.wireguard.android.model.Tunnel.Statistics;
@@ -115,7 +116,7 @@ public final class WgQuickBackend implements Backend {
         final List<String> output = new ArrayList<>();
         if (Application.getRootShell()
                 .run(output, "cat /sys/module/wireguard/version") != 0 || output.isEmpty())
-            throw new Exception(context.getString(R.string.module_version_error));
+            throw new BackendException(Reason.MODULE_VERSION_ERROR);
         return output.get(0);
     }
 
@@ -147,6 +148,6 @@ public final class WgQuickBackend implements Backend {
         // noinspection ResultOfMethodCallIgnored
         tempFile.delete();
         if (result != 0)
-            throw new Exception(context.getString(R.string.tunnel_config_error, result));
+            throw new BackendException(Reason.TUNNEL_CONFIG_ERROR, result);
     }
 }

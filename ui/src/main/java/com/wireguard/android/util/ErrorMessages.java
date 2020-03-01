@@ -10,6 +10,7 @@ import androidx.annotation.Nullable;
 
 import com.wireguard.android.Application;
 import com.wireguard.android.R;
+import com.wireguard.android.backend.BackendException;
 import com.wireguard.config.BadConfigException;
 import com.wireguard.config.BadConfigException.Location;
 import com.wireguard.config.BadConfigException.Reason;
@@ -53,6 +54,16 @@ public final class ErrorMessages {
             InetNetwork.class, R.string.parse_error_inet_network,
             Integer.class, R.string.parse_error_integer
     );
+    private static final Map<BackendException.Reason, Integer> BE_REASON_MAP = new EnumMap<>(Maps.of(
+            BackendException.Reason.MODULE_VERSION_ERROR, R.string.module_version_error,
+            BackendException.Reason.MULTIPLE_TUNNELS, R.string.multiple_tunnels_error,
+            BackendException.Reason.NO_CONFIG, R.string.no_config_error,
+            BackendException.Reason.TUN_CREATE_ERROR, R.string.tun_create_error,
+            BackendException.Reason.TUNNEL_CONFIG_ERROR, R.string.tunnel_config_error,
+            BackendException.Reason.TUNNEL_ON_ERROR, R.string.tunnel_on_error,
+            BackendException.Reason.VPN_NOT_AUTHORIZED, R.string.vpn_not_authorized_error,
+            BackendException.Reason.VPN_START_ERROR, R.string.vpn_start_error
+    ));
 
     private ErrorMessages() {
         // Prevent instantiation
@@ -64,7 +75,10 @@ public final class ErrorMessages {
             return resources.getString(R.string.unknown_error);
         final Throwable rootCause = rootCause(throwable);
         final String message;
-        if (rootCause instanceof BadConfigException) {
+        if (rootCause instanceof BackendException) {
+            final BackendException be = (BackendException) rootCause;
+            message = resources.getString(BE_REASON_MAP.get(be.getReason()), be.getFormatArgs());
+        } else if (rootCause instanceof BadConfigException) {
             final BadConfigException bce = (BadConfigException) rootCause;
             final String reason = getBadConfigExceptionReason(resources, bce);
             final String context = bce.getLocation() == Location.TOP_LEVEL ?
