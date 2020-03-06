@@ -93,12 +93,12 @@ public final class TunnelManager extends BaseObservable {
         tunnels.remove(tunnel);
         return Application.getAsyncWorker().runAsync(() -> {
             if (originalState == State.UP)
-                Application.getBackend().setState(tunnel, State.DOWN);
+                Application.getBackend().setState(tunnel, State.DOWN, tunnel.getConfig());
             try {
                 configStore.delete(tunnel.getName());
             } catch (final Exception e) {
                 if (originalState == State.UP)
-                    Application.getBackend().setState(tunnel, State.UP);
+                    Application.getBackend().setState(tunnel, State.UP, tunnel.getConfig());
                 // Re-throw the exception to fail the completion.
                 throw e;
             }
@@ -207,7 +207,13 @@ public final class TunnelManager extends BaseObservable {
 
     CompletionStage<Config> setTunnelConfig(final Tunnel tunnel, final Config config) {
         return Application.getAsyncWorker().supplyAsync(() -> {
-            final Config appliedConfig = Application.getBackend().applyConfig(tunnel, config);
+            Config appliedConfig;
+            try {
+                Application.getBackend().setState(tunnel, State.UP, config);
+                appliedConfig = config;
+            } catch (final Exception exc) {
+                appliedConfig = tunnel.getConfig();
+            }
             return configStore.save(tunnel.getName(), appliedConfig);
         }).thenApply(tunnel::onConfigChanged);
     }
@@ -227,11 +233,11 @@ public final class TunnelManager extends BaseObservable {
         tunnels.remove(tunnel);
         return Application.getAsyncWorker().supplyAsync(() -> {
             if (originalState == State.UP)
-                Application.getBackend().setState(tunnel, State.DOWN);
+                Application.getBackend().setState(tunnel, State.DOWN, tunnel.getConfig());
             configStore.rename(tunnel.getName(), name);
             final String newName = tunnel.onNameChanged(name);
             if (originalState == State.UP)
-                Application.getBackend().setState(tunnel, State.UP);
+                Application.getBackend().setState(tunnel, State.UP, tunnel.getConfig());
             return newName;
         }).whenComplete((newName, e) -> {
             // On failure, we don't know what state the tunnel might be in. Fix that.
@@ -247,7 +253,7 @@ public final class TunnelManager extends BaseObservable {
     CompletionStage<State> setTunnelState(final Tunnel tunnel, final State state) {
         // Ensure the configuration is loaded before trying to use it.
         return tunnel.getConfigAsync().thenCompose(x ->
-                Application.getAsyncWorker().supplyAsync(() -> Application.getBackend().setState(tunnel, state))
+                Application.getAsyncWorker().supplyAsync(() -> Application.getBackend().setState(tunnel, state, tunnel.getConfig()))
         ).whenComplete((newState, e) -> {
             // Ensure onStateChanged is always called (failure or not), and with the correct state.
             tunnel.onStateChanged(e == null ? newState : tunnel.getState());

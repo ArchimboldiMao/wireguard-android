@@ -18,17 +18,6 @@ import java.util.Set;
 
 public interface Backend {
     /**
-     * Update the volatile configuration of a running tunnel and return the resulting configuration.
-     * If the tunnel is not up, return the configuration that would result (if known), or else
-     * simply return the given configuration.
-     *
-     * @param tunnel The tunnel to apply the configuration to.
-     * @param config The new configuration for this tunnel.
-     * @return The updated configuration of the tunnel.
-     */
-    Config applyConfig(Tunnel tunnel, Config config) throws Exception;
-
-    /**
      * Enumerate the names of currently-running tunnels.
      *
      * @return The set of running tunnel names.
@@ -75,5 +64,5 @@ public interface Backend {
      *               {@code TOGGLE}.
      * @return The updated state of the tunnel.
      */
-    State setState(Tunnel tunnel, State state) throws Exception;
+    State setState(Tunnel tunnel, State state, Config config) throws Exception;
 }

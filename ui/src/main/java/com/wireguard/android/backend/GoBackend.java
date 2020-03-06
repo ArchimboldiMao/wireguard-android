@@ -63,22 +63,6 @@ public final class GoBackend implements Backend {
     private static native String wgVersion();
 
     @Override
-    public Config applyConfig(final Tunnel tunnel, final Config config) throws Exception {
-        if (tunnel.getState() == State.UP) {
-            // Restart the tunnel to apply the new config.
-            setStateInternal(tunnel, tunnel.getConfig(), State.DOWN);
-            try {
-                setStateInternal(tunnel, config, State.UP);
-            } catch (final Exception e) {
-                // The new configuration didn't work, so try to go back to the old one.
-                setStateInternal(tunnel, tunnel.getConfig(), State.UP);
-                throw e;
-            }
-        }
-        return config;
-    }
-
-    @Override
     public Set<String> enumerate() {
         if (currentTunnel != null) {
             final Set<String> runningTunnels = new ArraySet<>();
@@ -147,16 +131,28 @@ public final class GoBackend implements Backend {
     }
 
     @Override
-    public State setState(final Tunnel tunnel, State state) throws Exception {
+    public State setState(final Tunnel tunnel, State state, final Config config) throws Exception {
         final State originalState = getState(tunnel);
-        if (state == State.TOGGLE)
-            state = originalState == State.UP ? State.DOWN : State.UP;
-        if (state == originalState)
-            return originalState;
-        if (state == State.UP && currentTunnel != null)
-            throw new BackendException(Reason.MULTIPLE_TUNNELS);
-        Log.d(TAG, "Changing tunnel " + tunnel.getName() + " to state " + state);
-        setStateInternal(tunnel, tunnel.getConfig(), state);
+        if (originalState == State.UP && state == State.UP) {
+            // Restart the tunnel to apply the new config.
+            setStateInternal(tunnel, tunnel.getConfig(), State.DOWN);
+            try {
+                setStateInternal(tunnel, config, State.UP);
+            } catch (final Exception e) {
+                // The new configuration didn't work, so try to go back to the old one.
+                setStateInternal(tunnel, tunnel.getConfig(), State.UP);
+                throw e;
+            }
+        } else {
+            if (state == State.TOGGLE)
+                state = originalState == State.UP ? State.DOWN : State.UP;
+            if (state == originalState)
+                return originalState;
+            if (state == State.UP && currentTunnel != null)
+                throw new BackendException(Reason.MULTIPLE_TUNNELS);
+            Log.d(TAG, "Changing tunnel " + tunnel.getName() + " to state " + state);
+            setStateInternal(tunnel, config, state);
+        }
         return getState(tunnel);
     }
 
